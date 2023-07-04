@@ -1,36 +1,32 @@
+import { useInfiniteQuery } from "@tanstack/react-query";
 
-import { AxiosRequestConfig } from 'axios';
-import { Genre } from './useGenres';
-import useData from './useData';
-import { GameQuery } from '../App';
+import  APIClient, { FetchResponse } from "../services/api-client";
+import ms from "ms";
+import useGameQueryStore from "../store";
+import { Game } from "../entitise/Game";
 
-export interface Platform{
-  id:number;
-  name:string;
-  slug:string;
+const apiClient=new APIClient<Game>('/games');
+
+const useGames = () =>{
+  const gameQuery  = useGameQueryStore(s=>s.gameQuery);
+  return useInfiniteQuery<FetchResponse<Game>,Error>({
+    queryKey:['games',gameQuery],
+    queryFn:({pageParam = 1})=>apiClient.getAll({params:{
+      genres: gameQuery.genreId,
+      platforms: gameQuery.platformId,
+      ordering: gameQuery.sortOrder,
+      search: gameQuery.searchText,
+      page:pageParam,
+    }}),
+    getNextPageParam: (lastPage,allPage)=>{
+      return lastPage.next ? allPage.length + 1 : undefined;
+    },
+    staleTime:ms('24h')
+  });
 }
 
-export interface Game{
-  id:number;
-  name:String;
-  background_image:string;
-  platforms:{platform:Platform}[];
-  metacritic:number
-}
 
 
+ 
 
-
-const useGames = (gameQuery:GameQuery ) => 
-useData<Game>("/games",
-{params:{
-  genres: gameQuery.genre?.id,
-  platforms:gameQuery.platform?.id,
-  ordering:gameQuery.sortOrder,
-  search:gameQuery.searchText
- },
-},
-[gameQuery]);
-
-export default useGames
-
+export default useGames;

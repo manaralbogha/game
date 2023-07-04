@@ -1,52 +1,49 @@
 import {
+  Button,
+  Heading,
   HStack,
   Image,
   List,
   ListItem,
   Spinner,
-  Button,
-  Heading,
+  Text,
 } from "@chakra-ui/react";
-import useGenres, { Genre } from "../hooks/useGenres";
-interface Props {
-  onSelectedGenre: (genre: Genre) => void;
-  selectedGenre: Genre | null;
-}
+import useGenres from "../hooks/useGenres";
+import { Genre } from "../entitise/Genre";
+import getCroppedImageUrl from "../services/image-url";
+import useGameQueryStore from "../store";
 
-const GenreList = ({ onSelectedGenre, selectedGenre }: Props) => {
-  const { data, isLoading } = useGenres();
-  if (isLoading)
-    return (
-      <Spinner
-        thickness="4px"
-        speed="0.65s"
-        emptyColor="gray.200"
-        color="blue.500"
-        size="xl"
-      />
-    );
+const GenreList = () => {
+  const { data, isLoading, error } = useGenres();
+  const selectedGenreId = useGameQueryStore((s) => s.gameQuery.genreId);
+  const setGenreId = useGameQueryStore((s) => s.setGenreId);
+
+  // if (error) return <p>{error.message}</p>;
+
+  if (isLoading) return <Spinner />;
+
   return (
     <>
-      <Heading fontSize={"2xl"} marginBottom={3}>
-        Genre
+      <Heading fontSize="2xl" marginTop={9} marginBottom={3}>
+        Genres
       </Heading>
       <List>
-        {data.map((genre) => (
-          <ListItem key={genre.id} paddingY={"5px"}>
+        {data?.results.map((genre) => (
+          <ListItem key={genre.id} paddingY="5px">
             <HStack>
               <Image
-                objectFit="cover"
-                src={genre.image_background}
-                boxSize={"45px"}
+                boxSize="32px"
                 borderRadius={8}
+                objectFit="cover"
+                src={getCroppedImageUrl(genre.image_background)}
               />
               <Button
                 whiteSpace="normal"
                 textAlign="left"
-                fontWeight={genre.id === selectedGenre?.id ? "bold" : "normal"}
-                onClick={() => onSelectedGenre(genre)}
-                variant={"link"}
-                fontSize="xl"
+                fontWeight={genre.id === selectedGenreId ? "bold" : "normal"}
+                onClick={() => setGenreId(genre.id)}
+                fontSize="md"
+                variant="link"
               >
                 {genre.name}
               </Button>
